@@ -39,6 +39,7 @@ public abstract class AutoOpMode extends LinearOpMode{
     DcMotor middleIntake;
     DcMotor outerIntake;
     DcMotor lift;
+    DcMotor lift2;
 
     //Non-Drive Train Motors
 
@@ -100,6 +101,7 @@ public abstract class AutoOpMode extends LinearOpMode{
         middleIntake = hardwareMap.dcMotor.get("middleIntake");
         outerIntake = hardwareMap.dcMotor.get("outerIntake");
         lift = hardwareMap.dcMotor.get("lift");
+        lift2 = hardwareMap.dcMotor.get("lift2");
 
         basketServo = hardwareMap.servo.get("basketServo");
         gateServo = hardwareMap.servo.get("gateServo");
