@@ -16,6 +16,8 @@ public class CentralPointCIELABDetect extends AutoOpMode {
 
         while (opModeIsActive()){
           //  Bitmap bm = GDV.getImage();
+
+            //Watermelon
             //telemetry.addData("Mid", Arrays.toString(GDV.getCIELABOfMiddlePoint(bm)));
             telemetry.update();
         }
