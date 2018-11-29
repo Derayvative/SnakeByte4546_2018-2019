@@ -92,7 +92,7 @@ import java.util.List;
  */
 
 @TeleOp(name="Concept: Vuforia Rover Nav", group ="Concept")
-@Disabled
+//@Disabled
 public class ConceptVuforiaNavRoverRuckus extends LinearOpMode {
 
     /*
@@ -107,7 +107,8 @@ public class ConceptVuforiaNavRoverRuckus extends LinearOpMode {
      * Once you've obtained a license key, copy the string from the Vuforia web site
      * and paste it in to your code on the next line, between the double quotes.
      */
-    private static final String VUFORIA_KEY = " -- YOUR NEW VUFORIA KEY GOES HERE  --- ";
+    private static final String VUFORIA_KEY = "AXFo96T/////AAABmRzLk+Bot0LXr+j5jBrnBrRkeWb2d4sU3DIruHS37eyy2kGXLhDHifADYmZecTiiPh+BX0eGSA3vIm1tWNg0iskgm1+CL9CbiyFI0IKkje9dWDtoJPtvA6UwDHuSPV/H7rSEkhlrhsmmoY18a9Ahdu76900ohPoU53ENOwOFpexQOLsnNr1hIHlX8uORREAdrfdwJH9aK9Tj4LAVMPAsrRgItHs8J+NZMKrGKiBDy+YeRAlwXz/4uzXO64WR5nUsqB778k3FtGmp2C0HoSf9oQ5X9yU4iZehbLOGEfezLSufi/J9leG8ceDS3PIykPNQo8UaiKNssdNA4weqlVkbwTYXqrM6JEOKhfIpGD+ppPW1";
+
 
     // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
     // We will define some constants and conversions here
@@ -298,6 +299,7 @@ public class ConceptVuforiaNavRoverRuckus extends LinearOpMode {
                 telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
                         translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
 
+                //telemetry.addData("Distance from Rover", Math.sqrt(Math.pow(translation.get(0), 2) + Math.pow(translation.get(1) - 65.0, 2) + Math.pow(translation.get(2), 2)));
                 // express the rotation of the robot in degrees.
                 Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
                 telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
