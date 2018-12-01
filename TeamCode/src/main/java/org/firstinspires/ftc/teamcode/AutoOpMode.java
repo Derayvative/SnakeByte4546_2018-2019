@@ -394,9 +394,9 @@ public abstract class AutoOpMode extends LinearOpMode{
         int startPos = getAvgEncoder();
         while ((Math.abs(getAvgEncoder() - startPos) < distance) && (opModeIsActive())) {
             int distanceAway = Math.abs(distance - Math.abs(getAvgEncoder() - startPos));
-            setPower(distanceAway * .0005 + .12);
+            setPower(distanceAway * .0005 + .24);
             telemetry.addData("distance", Math.abs(distanceAway - Math.abs(getAvgEncoder() - startPos)));
-            telemetry.addData("Power", distanceAway * .0005 + .12);
+            telemetry.addData("Power", distanceAway * .0005 + .24);
             telemetry.update();
             idle();
         }
@@ -411,9 +411,9 @@ public abstract class AutoOpMode extends LinearOpMode{
         int startPos = getAvgEncoder();
         while ((Math.abs(getAvgEncoder() - startPos) < distance) && (opModeIsActive())) {
             int distanceAway = Math.abs(distance - Math.abs(getAvgEncoder() - startPos));
-            setPower(-distanceAway * .0005 - .12);
+            setPower(-distanceAway * .0005 - .24);
             telemetry.addData("distance", Math.abs(distanceAway - Math.abs(getAvgEncoder() - startPos)));
-            telemetry.addData("Power", distanceAway * .0005 - .12);
+            telemetry.addData("Power", distanceAway * .0005 - .24);
             telemetry.update();
             idle();
         }
