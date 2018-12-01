@@ -9,8 +9,7 @@ public class MovementTest extends AutoOpMode {
         initialize();
         waitForStart();
 
-        dropTeamMarker();
-        sleep(1000);
+        getAvgEncoder();
 
     }
 }

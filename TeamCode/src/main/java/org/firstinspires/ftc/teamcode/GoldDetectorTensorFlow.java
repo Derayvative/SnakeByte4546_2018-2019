@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
@@ -48,12 +49,14 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
      * localization engine.
      */
     private VuforiaLocalizer vuforia;
-
+    private VuforiaLocalizer vuforiaCam;
     /**
      * {@link #tfod} is the variable we will use to store our instance of the Tensor Flow Object
      * Detection engine.
      */
     private TFObjectDetector tfod;
+
+    private String[] recentResults = new String[10];
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -69,8 +72,10 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
             telemetry.addData("Sorry!", "This device is not compatible with TFOD");
         }
 
+        //waitForStart();
+
         /** Wait for the game to begin */
-        telemetry.addData(">", "Press Play to start tracking");
+        //telemetry.addData(">", "Press Play to start tracking");
         telemetry.update();
 
 
@@ -110,14 +115,17 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
                             if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
                                 if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
                                     telemetry.addData("Gold Mineral Position", "Left");
+                                    shiftArrayDown(recentResults, "L");
                                 } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
                                     telemetry.addData("Gold Mineral Position", "Right");
+                                    shiftArrayDown(recentResults, "R");
                                 } else {
-                                    telemetry.addData("Gold Mineral Position", "Center");
+                                    telemetry.addData("Gold Mineral Position", "Middle");
+                                    shiftArrayDown(recentResults, "M");
                                 }
                             }
                         }
-                        telemetry.update();
+                        //telemetry.update();
 
                         if (updatedRecognitions.size() == 2) {
                             int goldMineralX = -1;
@@ -135,54 +143,83 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
                             if (goldMineralX == -1) {
                                 telemetry.addData("Gold Mineral Position", "Right");
                                 target = "Right";
+                                shiftArrayDown(recentResults, "R");
                             }
                             else if (goldMineralX < silverMineral1X) {
                                 telemetry.addData("Gold Mineral Position", "Left");
                                 target = "Left";
+                                shiftArrayDown(recentResults, "L");
                             } else {
                                 telemetry.addData("Gold Mineral Position", "Middle");
                                 target = "Middle";
+                                shiftArrayDown(recentResults, "M");
                             }
-                            telemetry.update();
+
+                        }
+                        if (updatedRecognitions.size() == 1){
+                            int goldMineralX = -1;
+                            int silverMineral1X = -1;
+                            for (Recognition recognition : updatedRecognitions) {
+                                if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                                    goldMineralX = (int) (recognition.getLeft() + recognition.getRight() / 2);
+                                }
+                            }
+
                         }
                     }
+                    else{
+                        telemetry.addData("Reading", "Inconclusive");
+                    }
                 }
+                telemetry.addData("Recent results", Arrays.toString(recentResults));
+                target = getTarget(recentResults);
+                telemetry.addData("Target", target);
+                telemetry.update();
             }
         }
-
         if (tfod != null) {
             tfod.shutdown();
         }
         waitForStart();
         if (target.equals("Right")){
-            precisionTurnToPosition(-150.0);
+            precisionTurnToPosition(-153.0);
             moveToRangeBasic(14.0);
             precisionTurnToPosition(-225);
             moveToRangeBasic(12.0);
             precisionTurnToPosition(-120);
             setPower(-0.5);
             sleep(3000);
-            turnToPosition(-110);
+            if (Math.abs(getFunctionalGyroYaw() - (-135)) > 5){
+                turnToPosition(-135);
+            }
+            setPower(-0.5);
             sleep(7000);
         }
         if (target.equals("Middle")){
             precisionTurnToPosition(180);
-            moveToRangeBasic(31.0);
-            turnToPosition(251.374);
+            PEncoderSetPowerForward(2000);
+            moveToRangeBasic(11.0);
+            turnToPosition(250);
             setPower(-0.5);
             sleep(3000);
-            turnToPosition(230);
+            if (Math.abs(getFunctionalGyroYaw() - (225)) > 5){
+                turnToPosition(225);
+            }
+            setPower(-0.5);
             sleep(7000);
         }
         if (target.equals("Left")){
-            precisionTurnToPosition(150.625);
+            precisionTurnToPosition(153);
             moveToRangeBasic(14.0);
             precisionTurnToPosition(224.9375);
             moveToRangeBasic(8.0);
             precisionTurnToPosition(248.4375);
             setPower(-0.5);
             sleep(3000);
-            turnToPosition(230);
+            if (Math.abs(getFunctionalGyroYaw() - (225)) > 5){
+                turnToPosition(225);
+            }
+            setPower(-0.5);
             sleep(7000);
         }
 
@@ -203,6 +240,7 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
 
+
         // Loading trackables is not necessary for the Tensor Flow Object Detection engine.
     }
 
@@ -210,6 +248,35 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
      * Initialize the Tensor Flow Object Detection engine.
      */
     private void initTfod() {
+        int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
+                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_GOLD_MINERAL, LABEL_SILVER_MINERAL);
+
+    }
+
+    public void initVufPhoneCamera() {
+        /*
+         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
+         */
+        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
+
+        parameters.vuforiaLicenseKey = VUFORIA_KEY;
+        parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
+
+        //  Instantiate the Vuforia engine
+        vuforiaCam = ClassFactory.getInstance().createVuforia(parameters);
+
+
+
+        // Loading trackables is not necessary for the Tensor Flow Object Detection engine.
+    }
+
+    public void initTfodPhoneCamera() {
+        tfod.deactivate();
+        tfod.shutdown();
+        sleep(2000);
         int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
                 "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);

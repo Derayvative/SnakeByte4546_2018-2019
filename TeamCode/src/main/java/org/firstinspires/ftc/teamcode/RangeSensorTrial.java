@@ -11,7 +11,8 @@ public class RangeSensorTrial extends AutoOpMode {
         initialize();
         waitForStart();
         while (opModeIsActive()){
-            //telemetry.addData("Range", revRange.getDistance(DistanceUnit.CM));
+            telemetry.addData("Range", getRangeReading());
+            telemetry.addData("Encoder", getAvgEncoder());
             telemetry.update();
             sleep(100);
         }

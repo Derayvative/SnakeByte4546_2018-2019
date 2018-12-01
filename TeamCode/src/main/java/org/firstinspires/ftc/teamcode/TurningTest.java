@@ -32,12 +32,15 @@ public class TurningTest extends AutoOpMode {
         turnToPosition(-110.1875);
         */
 
-        precisionTurnToPosition(-146.625);
-        moveToRangeBasic(18);
-        precisionTurnToPosition(-219.4375);
+        precisionTurnToPosition(-155);
+        moveToRangeBasic(13);
+        precisionTurnToPosition(-220);
         moveToRangeBasic(30.0);
-        moveToRangeBasic(135.0);
+        moveToRangeBasic(130.0);
         precisionTurnToPosition(-180);
-        moveToRangeBasic(172.0);
+        PEncoderSetPowerBackward(700);
+        precisionTurnToPosition(-240);
+        intake.setPower(0.5);
+        PEncoderSetPowerBackward(500);
     }
 }

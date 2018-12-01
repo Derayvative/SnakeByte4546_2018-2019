@@ -61,6 +61,8 @@ public abstract class AutoOpMode extends LinearOpMode{
     double previousGyro;
     int gyroMultiplier;
     double offset = -90;
+    double reasonableRange = 0;
+    double previousReasonableRange = 0;
 
     ColorSensor CS;
     DistanceSensor DS;
@@ -193,8 +195,57 @@ public abstract class AutoOpMode extends LinearOpMode{
     }
 
     public int getAvgEncoder() throws InterruptedException {
-        return ( ( Math.abs(BL.getCurrentPosition()) + Math.abs(BR.getCurrentPosition()) ) /2);
+        return ( ( Math.abs(BL.getCurrentPosition()) + Math.abs(BR.getCurrentPosition() + FR.getCurrentPosition() + FL.getCurrentPosition()) ) / 4);
     }
+
+    public int getSingleEncoder() throws InterruptedException{
+        return FR.getCurrentPosition();
+    }
+
+    public void PEncoderSetPowerForward(int encoderDist) throws InterruptedException{
+        int startEnc = getSingleEncoder();
+        double kP = 0.07 / 200;
+        double kI = 0.07 / 1000;
+        double base = 0.07;
+        double startTime = System.currentTimeMillis();
+        while (Math.abs(getSingleEncoder() - startEnc) < encoderDist && opModeIsActive()){
+            int error = Math.abs(encoderDist - (getSingleEncoder() - startEnc));
+            telemetry.addData("Error", error);
+            double timeElapsedMS = System.currentTimeMillis() - startTime;
+            double power = error * kP + base + kI * timeElapsedMS;
+            if (power > 0.4){
+                power = 0.4;
+            }
+            telemetry.addData("Power", power);
+            setPower(power);
+            telemetry.update();
+        }
+    }
+
+    public void PEncoderSetPowerBackward(int encoderDist) throws InterruptedException{
+        int startEnc = getSingleEncoder();
+        double kP = 0.07 / 200;
+        double kI = 0.07 / 1000;
+        double base = 0.07;
+        double startTime = System.currentTimeMillis();
+        while (Math.abs(getSingleEncoder() - startEnc) < encoderDist && opModeIsActive()){
+            int error = Math.abs(encoderDist - (getSingleEncoder() - startEnc));
+            telemetry.addData("Error", error);
+            double timeElapsedMS = System.currentTimeMillis() - startTime;
+            double power = error * kP + base + kI * timeElapsedMS;
+            if (power > 0.4){
+                power = 0.4;
+            }
+            telemetry.addData("Power", -power);
+            setPower(-power);
+            telemetry.update();
+        }
+    }
+
+
+
+
+
 
 
     public void turn(double rotation, double angle) throws InterruptedException {
@@ -389,11 +440,50 @@ public abstract class AutoOpMode extends LinearOpMode{
         }
     }
 
+    public void moveForwardEncoderP(int distance) throws InterruptedException {
+        double startPos = getAvgEncoder();
+        while ((Math.abs(getAvgEncoder() - startPos) < distance) && (opModeIsActive())) {
+            double power = (0.15 / 500) * Math.abs(getAvgEncoder() - startPos) / distance + 0.14;
+            if (power > 0.3){
+                power = 0.3;
+            }
+            setPower(power);
+            telemetry.addData("distance", getAvgEncoder() - startPos);
+            telemetry.update();
+            idle();
+        }
+        setZero();
+        if (Math.abs(getAvgEncoder() - startPos) > distance + 50) {
+            telemetry.addData("overshoot", "fix");
+            telemetry.update();
+        }
+    }
+
     // Move backwards based off encoders
     public void moveBackwardEncoder(double power, int distance) throws InterruptedException {
         int startPos = getAvgEncoder();
         while ((Math.abs(getAvgEncoder() - startPos) < distance) && (opModeIsActive())) {
             setPower(-power);
+            telemetry.addData("distance", getAvgEncoder() - startPos);
+            telemetry.update();
+            idle();
+        }
+        setZero();
+        if (Math.abs(getAvgEncoder() - startPos) > distance + 50) {
+            telemetry.addData("overshoot", "fix");
+            telemetry.update();
+        }
+    }
+
+    public void moveBackwardEncoderP(int distance) throws InterruptedException {
+        double startPos = getAvgEncoder();
+        while ((Math.abs(getAvgEncoder() - startPos) < distance) && (opModeIsActive())) {
+            double power = -(0.15 / 350) * Math.abs(distance - (getAvgEncoder() - startPos)) - 0.08;
+            telemetry.addData("Power", power);
+            if (power < -0.4){
+                power = -0.4;
+            }
+            setPower(power);
             telemetry.addData("distance", getAvgEncoder() - startPos);
             telemetry.update();
             idle();
@@ -419,12 +509,15 @@ public abstract class AutoOpMode extends LinearOpMode{
         double startTime = time.milliseconds();
         double speedUp = 0;
         double initialPower = 0.12;
+        if (desired < 15){
+            initialPower = 0.18;
+        }
         while (Math.abs(getFunctionalGyroYaw() - start) < desired && opModeIsActive()) {
             proximity = (Math.abs(getFunctionalGyroYaw() - start - desired));
             //double pTerm = proximity * 0.00355;
-            double pTerm = proximity * 0.00405;
-            if (pTerm > 0.35){
-                pTerm = 0.35;
+            double pTerm = proximity * 0.00455;
+            if (pTerm > 0.4){
+                pTerm = 0.4;
             }
             double power = -pTerm - initialPower - speedUp;
 
@@ -432,12 +525,12 @@ public abstract class AutoOpMode extends LinearOpMode{
             telemetry.addData("Yaw (Functional): ", getFunctionalGyroYaw());
             telemetry.addData("Time", time.milliseconds() - startTime);
             telemetry.update();
-            if (power > 0.4){
-                power = 0.4;
-            }
+            //if (power > 0.4){
+            //    power = 0.4;
+            //}
             telemetry.addData("Turn Power: ", power);
             turnR(power);
-            speedUp = (time.milliseconds() - startTime) * 0.08 / 1000;
+            speedUp = (time.milliseconds() - startTime) * 0.1 / 1000;
             if (time.milliseconds() - startTime > 5000){
                 break;
             }
@@ -456,12 +549,15 @@ public abstract class AutoOpMode extends LinearOpMode{
         double timeSinceSpeedIncrease = 0;
         speedUp = 0;
         double initialPower = 0.12;
+        if (desired < 15){
+            initialPower = 0.18;
+        }
         while (Math.abs(getFunctionalGyroYaw() - start) < desired - 1 && opModeIsActive()) {
             proximity = Math.abs((Math.abs(getFunctionalGyroYaw() - start) - desired));
             //double pTerm = proximity * 0.00355;
-            double pTerm = proximity * 0.00405;
-            if (pTerm > 0.35){
-                pTerm = 0.35;
+            double pTerm = proximity * 0.00455;
+            if (pTerm > 0.4){
+                pTerm = 0.4;
             }
             double power = pTerm + initialPower + speedUp;
             telemetry.addData("Proximity Value: ", proximity);
@@ -469,13 +565,13 @@ public abstract class AutoOpMode extends LinearOpMode{
             telemetry.addData("Yaw Value:", getFunctionalGyroYaw());
             telemetry.addData("Speed Up", speedUp);
             telemetry.update();
-            if (power > 0.5){
-                power = 0.5;
-            }
+            //if (power > 0.5){
+            //    power = 0.5;
+            //}
             telemetry.addData("Turn value: ", power);
             turn(power);
             //if (time.milliseconds() - startTime >= 1000) {
-                speedUp = (time.milliseconds() - startTime) * 0.08 / 1000;
+                speedUp = (time.milliseconds() - startTime) * 0.1 / 1000;
           //  }
             if (time.milliseconds() - startTime > 5000){
                 break;
@@ -499,9 +595,9 @@ public abstract class AutoOpMode extends LinearOpMode{
         while (Math.abs(getFunctionalGyroYaw() - start) < desired - 1 && opModeIsActive()) {
             proximity = Math.abs((Math.abs(getFunctionalGyroYaw() - start) - desired));
             //double pTerm = proximity * 0.00355;
-            double pTerm = proximity * 0.0043;
-            if (pTerm > 0.3){
-                pTerm = 0.3;
+            double pTerm = proximity * 0.00455;
+            if (pTerm > 0.4){
+                pTerm = 0.4;
             }
             double power = pTerm + initialPower + speedUp;
             telemetry.addData("Proximity Value: ", proximity);
@@ -710,6 +806,17 @@ public abstract class AutoOpMode extends LinearOpMode{
             reading = rangeSensor.getDistance(DistanceUnit.CM);
         }
         return reading;
+    }
+
+    public double[] getReasonableRangeTest() throws InterruptedException{
+        double reading = rangeSensor.getDistance(DistanceUnit.MM);
+        while (reading > 4000 || Double.isNaN(reading) && opModeIsActive()){
+            reading = rangeSensor.getDistance(DistanceUnit.MM);
+        }
+        previousReasonableRange = reasonableRange;
+        reasonableRange = reading;
+        double[] arry = {reasonableRange, (reasonableRange - previousReasonableRange), previousReasonableRange};
+        return arry;
     }
 
     //TODO: Create range sensor based movement code
@@ -1251,6 +1358,30 @@ public abstract class AutoOpMode extends LinearOpMode{
         }
         array[array.length - 1] = insertEnd;
         return array;
+    }
+
+    public String getTarget(String[] scores){
+        int[] targetScores = {0, 0, 0};
+        for (int i = 0; i < 10; i++){
+            if (scores[i] != null) {
+                if (scores[i].equals("L")) {
+                    targetScores[0] += i;
+                }
+                if (scores[i].equals("M")) {
+                    targetScores[1] += i;
+                }
+                if (scores[i].equals("R")) {
+                    targetScores[2] += i;
+                }
+            }
+        }
+        if (targetScores[0] > targetScores[1] && targetScores[0] > targetScores[2]){
+            return "Left";
+        }
+        else if (targetScores[1] > targetScores[2] && targetScores[1] > targetScores[0]){
+            return "Middle";
+        }
+        return "Right";
     }
 
 
