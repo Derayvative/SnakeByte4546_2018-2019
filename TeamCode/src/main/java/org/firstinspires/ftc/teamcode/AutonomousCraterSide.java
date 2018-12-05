@@ -23,7 +23,7 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@TeleOp(name = "Gold Detector Tensor Flow Test", group = "Concept")
+@TeleOp(name = "AutonomousCraterSide", group = "Concept")
 
 public class AutonomousCraterSide extends AutoOpMode {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
@@ -183,7 +183,7 @@ public class AutonomousCraterSide extends AutoOpMode {
         waitForStart();
         if (target.equals("Right")){
 
-            precisionTurnToPosition(25);
+            precisionTurnToPosition(20);
             sleep(100);
 
             pMoveBackward(350);
@@ -209,7 +209,7 @@ public class AutonomousCraterSide extends AutoOpMode {
         }
         if (target.equals("Left")){
 
-            precisionTurnToPosition(-25);
+            precisionTurnToPosition(-30);
             sleep(100);
 
             pMoveBackward(350);
