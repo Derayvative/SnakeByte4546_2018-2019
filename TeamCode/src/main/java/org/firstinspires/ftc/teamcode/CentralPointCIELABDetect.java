@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import java.util.Arrays;
 
-@Autonomous
+//@Autonomous
 public class CentralPointCIELABDetect extends AutoOpMode {
     @Override
     public void runOpMode() throws InterruptedException {

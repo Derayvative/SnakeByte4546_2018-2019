@@ -22,7 +22,7 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@TeleOp(name = "Gold Detector Tensor Flow Test Versatile", group = "Concept")
+//@TeleOp(name = "Gold Detector Tensor Flow Test Versatile", group = "Concept")
 
 public class TensorTest extends AutoOpMode {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";

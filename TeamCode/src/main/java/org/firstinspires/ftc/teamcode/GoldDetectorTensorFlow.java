@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -23,7 +24,7 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@TeleOp(name = "Gold Detector Tensor Flow Test5", group = "Concept")
+@Autonomous(name = "123MATTRUNTHISAUTONOMOUS")
 
 public class GoldDetectorTensorFlow extends AutoOpMode {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
@@ -64,6 +65,7 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
         // first.
         initVuforia();
         initialize();
+        int goldMineralX = -1;
         String target = "Unknown";
 
         if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
@@ -89,20 +91,26 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
                 if (tfod != null) {
                     // getUpdatedRecognitions() will return null if no new information is available since
                     // the last time that call was made.
+                    sleep(100);
                     List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
                     if (updatedRecognitions != null) {
-                        telemetry.addData("# Object Detected", updatedRecognitions.size());
+                        int goldCount = 0;
+                        int silverCount = 0;
                         for (Recognition recognition : updatedRecognitions) {
                             if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
-                                telemetry.addData("Gold Coordinates: ", (recognition.getLeft() + recognition.getRight()) / 2.0 + " " + (recognition.getTop() + recognition.getBottom()) / 2.0);
+                                goldCount++;
+                                telemetry.addData("Gold " + goldCount + " Coordinates: ", (recognition.getLeft() + recognition.getRight()) / 2.0 + " " + (recognition.getTop() + recognition.getBottom()) / 2.0);
                             } else {
-                                telemetry.addData("Silver Coordinates: ", (recognition.getLeft() + recognition.getRight()) / 2.0 + " " + (recognition.getTop() + recognition.getBottom()) / 2.0);
+                                silverCount++;
+                                telemetry.addData("Silver " + silverCount + " Coordinates: ", (recognition.getLeft() + recognition.getRight()) / 2.0 + " " + (recognition.getTop() + recognition.getBottom()) / 2.0);
                             }
                         }
+
                         if (updatedRecognitions.size() == 3) {
-                            int goldMineralX = -1;
+                            goldMineralX = -1;
                             int silverMineral1X = -1;
                             int silverMineral2X = -1;
+                            telemetry.addData("# Object Detected", updatedRecognitions.size());
                             for (Recognition recognition : updatedRecognitions) {
                                 if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
                                     goldMineralX = (int) recognition.getLeft();
@@ -128,9 +136,10 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
                         //telemetry.update();
 
                         if (updatedRecognitions.size() == 2) {
-                            int goldMineralX = -1;
+                            goldMineralX = -1;
                             int silverMineral1X = -1;
                             int silverMineral2X = -1;
+                            telemetry.addData("# Object Detected", updatedRecognitions.size());
                             for (Recognition recognition : updatedRecognitions) {
                                 if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
                                     goldMineralX = (int) recognition.getLeft();
@@ -154,25 +163,38 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
                                 target = "Middle";
                                 shiftArrayDown(recentResults, "M");
                             }
-
                         }
                         if (updatedRecognitions.size() == 1){
-                            int goldMineralX = -1;
+                            goldMineralX = -1;
                             int silverMineral1X = -1;
+                            telemetry.addData("# Object Detected", updatedRecognitions.size());
                             for (Recognition recognition : updatedRecognitions) {
                                 if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
                                     goldMineralX = (int) (recognition.getLeft() + recognition.getRight() / 2);
                                 }
                             }
-
+                            if (goldMineralX < 500 && goldMineralX != -1){
+                                telemetry.addData("Gold Mineral Position", "Left");
+                                target = "Left";
+                                shiftArrayDown(recentResults, "L");
+                            }
+                            if (goldMineralX > 500 && goldMineralX != -1){
+                                telemetry.addData("Gold Mineral Position", "Middle");
+                                target = "Middle";
+                                shiftArrayDown(recentResults, "M");
+                            }
+                            if (goldMineralX == -1){
+                                telemetry.addData("Gold Mineral Position", "Right (Sketch)");
+                                target = "Right";
+                                shiftArrayDown(recentResults, "R");
+                            }
                         }
                     }
-                    else{
-                        telemetry.addData("Reading", "Inconclusive");
-                    }
+                    
                 }
                 telemetry.addData("Recent results", Arrays.toString(recentResults));
                 target = getTarget(recentResults);
+                telemetry.addData("Gold X-Position", goldMineralX);
                 telemetry.addData("Target", target);
                 telemetry.update();
             }
@@ -183,44 +205,67 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
         waitForStart();
         if (target.equals("Right")){
             precisionTurnToPosition(-153.0);
-            moveToRangeBasic(14.0);
+            PEncoderSetPowerForward(1050);
+            moveToRangeBasic(14.0, -153);
             precisionTurnToPosition(-225);
-            moveToRangeBasic(12.0);
+            PEncoderSetPowerForward(600);
+            moveToRangeBasic(12.0, -225);
+            dropTeamMarker();
             precisionTurnToPosition(-120);
+
             setPower(-0.5);
             sleep(3000);
             if (Math.abs(getFunctionalGyroYaw() - (-135)) > 5){
                 turnToPosition(-135);
             }
+            middleIntake.setPower(-0.75);
+            outerIntake.setPower(1);
             setPower(-0.5);
-            sleep(7000);
+            sleep(1000);
+            middleIntake.setPower(0);
+            outerIntake.setPower(0);
+            sleep(5000);
         }
         if (target.equals("Middle")){
             precisionTurnToPosition(180);
             PEncoderSetPowerForward(2000);
-            moveToRangeBasic(11.0);
-            turnToPosition(250);
+            moveToRangeBasic(20.0, 180);
+            dropTeamMarker();
+            precisionTurnToPosition(245);
             setPower(-0.5);
             sleep(3000);
             if (Math.abs(getFunctionalGyroYaw() - (225)) > 5){
                 turnToPosition(225);
             }
+            middleIntake.setPower(-0.75);
+            outerIntake.setPower(-1);
             setPower(-0.5);
-            sleep(7000);
+            sleep(1000);
+            middleIntake.setPower(0);
+            outerIntake.setPower(0);
+            sleep(5000);
         }
         if (target.equals("Left")){
             precisionTurnToPosition(153);
-            moveToRangeBasic(14.0);
-            precisionTurnToPosition(224.9375);
-            moveToRangeBasic(8.0);
-            precisionTurnToPosition(248.4375);
+            PEncoderSetPowerForward(1050);
+            moveToRangeBasic(14.0, 153);
+            precisionTurnToPosition(225);
+            PEncoderSetPowerForward(600);
+            moveToRangeBasic(12.0, 225);
+            dropTeamMarker();
+            precisionTurnToPosition(245);
             setPower(-0.5);
             sleep(3000);
             if (Math.abs(getFunctionalGyroYaw() - (225)) > 5){
                 turnToPosition(225);
             }
+            middleIntake.setPower(-0.75);
+            outerIntake.setPower(1);
             setPower(-0.5);
-            sleep(7000);
+            sleep(1000);
+            middleIntake.setPower(0);
+            outerIntake.setPower(0);
+            sleep(5000);
         }
 
     }

@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import static java.lang.Thread.sleep;
+import static org.firstinspires.ftc.teamcode.RobotConstants.GATE_DOWN_POSITION;
+import static org.firstinspires.ftc.teamcode.RobotConstants.GATE_UP_POSITION;
 import static org.firstinspires.ftc.teamcode.RobotConstants.TEAM_MARKER_DOWN_POSITION;
 import static org.firstinspires.ftc.teamcode.RobotConstants.TEAM_MARKER_UP_POSITION;
 
@@ -84,8 +86,8 @@ public class TeleOpMode extends OpMode{
         basketServo = hardwareMap.servo.get("basketServo");
         gateServo = hardwareMap.servo.get("gateServo");
 
-        basketServo.setPosition(0.9);
-        gateServo.setPosition(0.65);
+        basketServo.setPosition(TEAM_MARKER_DOWN_POSITION);
+        gateServo.setPosition(GATE_UP_POSITION);
 
         //Intake
         //Commented out until Trollbot has an intake
@@ -142,15 +144,24 @@ public class TeleOpMode extends OpMode{
         }
 
         if (halfSpeed == 0.5){
-            telemetry.addData("Half Speed", "True");
+            telemetry.addData("Half Speed (B)", "True");
         }
         else{
-            telemetry.addData("Half Speed", "False");
+            telemetry.addData("Half Speed (B)", "False");
         }
 
         if (gamepad2.right_trigger > 0.1){
             middleIntake.setPower(-1);
             outerIntake.setPower(-1);
+            if (!gateServoPositionDown) {
+                gateServoPositionDown = true;
+                gateServo.setPosition(GATE_UP_POSITION);
+            }
+            if (!basketServoPositionDown){
+                basketServoPositionDown = true;
+                basketServo.setPosition(TEAM_MARKER_DOWN_POSITION);
+            }
+
         }
         else if (gamepad2.right_bumper){
             middleIntake.setPower(-1);
@@ -159,10 +170,20 @@ public class TeleOpMode extends OpMode{
         else if (gamepad2.left_trigger > 0.1){
             middleIntake.setPower(1);
             outerIntake.setPower(1);
+          //  if (!gateServoPositionDown){
+
+            //}
         }
         else if (gamepad2.left_bumper){
             middleIntake.setPower(1);
             outerIntake.setPower(0);
+        }
+
+        else if (gamepad1.right_trigger > 0.1){
+            outerIntake.setPower(gamepad1.right_trigger / 10.0 + 0.1);
+        }
+        else if (gamepad1.left_trigger > 0.1){
+            outerIntake.setPower(-gamepad1.left_trigger / 10.0 - 0.1);
         }
         else{
             middleIntake.setPower(0);
@@ -194,41 +215,41 @@ public class TeleOpMode extends OpMode{
                 }
             }
             */
-            basketServo.setPosition(0.4);
+            basketServo.setPosition(TEAM_MARKER_UP_POSITION);
             mostRecentAPress = time.milliseconds();
         }
         else if (gamepad2.a && !basketServoPositionDown && time.milliseconds() - mostRecentAPress > 250){
             basketServoPositionDown = true;
-            basketServo.setPosition(0.9);
+            basketServo.setPosition(TEAM_MARKER_DOWN_POSITION);
             mostRecentAPress = time.milliseconds();
         }
 
         if (gamepad2.b && gateServoPositionDown && time.milliseconds() - mostRecentAPress > 250){
             gateServoPositionDown = false;
-            gateServo.setPosition(0.25);
+            gateServo.setPosition(GATE_DOWN_POSITION);
             mostRecentAPress = time.milliseconds();
         }
         else if (gamepad2.b && !gateServoPositionDown && time.milliseconds() - mostRecentAPress > 250){
             gateServoPositionDown = true;
-            gateServo.setPosition(0.65);
+            gateServo.setPosition(GATE_UP_POSITION);
             mostRecentAPress = time.milliseconds();
         }
         if (gamepad2.y){
             basketServoPositionDown = true;
-            basketServo.setPosition(0.9);
+            basketServo.setPosition(TEAM_MARKER_DOWN_POSITION);
             gateServoPositionDown = true;
-            gateServo.setPosition(0.65);
+            gateServo.setPosition(GATE_UP_POSITION);
         }
         if (gamepad2.x){
             gateServoPositionDown = false;
-            gateServo.setPosition(0.25);
+            gateServo.setPosition(GATE_DOWN_POSITION);
             try {
                 Thread.sleep(300);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             basketServoPositionDown = false;
-            basketServo.setPosition(0.4);
+            basketServo.setPosition(TEAM_MARKER_UP_POSITION);
 
         }
 

@@ -4,17 +4,20 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-@Autonomous
+//@Autonomous
 public class RangeSensorTrial extends AutoOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         initialize();
         waitForStart();
+        moveToRangeBasic(99);
+        /*
         while (opModeIsActive()){
             telemetry.addData("Range", getRangeReading());
             telemetry.addData("Encoder", getAvgEncoder());
             telemetry.update();
             sleep(100);
         }
+        */
     }
 }

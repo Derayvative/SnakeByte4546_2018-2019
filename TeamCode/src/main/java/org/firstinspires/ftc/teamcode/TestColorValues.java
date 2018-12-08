@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 
-@Autonomous
+//@Autonomous
 public class TestColorValues extends AutoOpMode {
     @Override
     public void runOpMode() throws InterruptedException{

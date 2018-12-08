@@ -6,11 +6,15 @@ package org.firstinspires.ftc.teamcode;
 public final class RobotConstants {
 
     //Final variables cannot be changed
-    public static final double TEAM_MARKER_DOWN_POSITION = 0.7;
+    public static final double TEAM_MARKER_DOWN_POSITION = 0.875;
 
-    public static final double TEAM_MARKER_UP_POSITION = 0.1;
+    public static final double TEAM_MARKER_UP_POSITION = 0.5;
 
     //Color Sensor Constants
+
+    public static final double GATE_DOWN_POSITION = 0.5;
+
+    public static final double GATE_UP_POSITION = 0.13;
 
     //Arrays contain L, A, B values
     //public static final double[] GOLD_CIELAB_VALUES_CLOSE = {190, 80, 120};

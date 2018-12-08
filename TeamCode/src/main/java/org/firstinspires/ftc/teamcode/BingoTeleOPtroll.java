@@ -14,7 +14,7 @@ import static org.firstinspires.ftc.teamcode.RobotConstants.TEAM_MARKER_UP_POSIT
 // Luca's pushhhhhh 9/20
 // Landon 9/20
 
-@TeleOp
+//@TeleOp
 public class BingoTeleOPtroll extends OpMode{
 
     // ======= instance variables: =======

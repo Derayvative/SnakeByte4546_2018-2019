@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-@Autonomous
+//@Autonomous
 public class pturnAutoTest extends AutoOpMode {
     @Override
     public void runOpMode() throws InterruptedException {

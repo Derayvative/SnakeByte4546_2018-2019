@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 
-@Autonomous
+//@Autonomous
 public class TurningTest extends AutoOpMode {
     VuforiaLocalizer vuforia;
     Bitmap image1;

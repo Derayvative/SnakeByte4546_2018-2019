@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-@Autonomous
+//@Autonomous
 public class ColorSensorTest extends LinearOpMode {
     ColorSensor CS;
     DistanceSensor DS;

@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-@Autonomous
+//@Autonomous
 public class CentralPointFinder extends AutoOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
