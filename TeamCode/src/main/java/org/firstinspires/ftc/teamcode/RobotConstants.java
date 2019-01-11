@@ -14,7 +14,11 @@ public final class RobotConstants {
 
     public static final double GATE_DOWN_POSITION = 0.5;
 
-    public static final double GATE_UP_POSITION = 0.13;
+    public static final double GATE_UP_POSITION = 0.05;
+
+    public static final double HANG_SERVO_DOWN_POSITION = 0;
+
+    public static final double HANG_SERVO_UP_POSITION = 0.35;
 
     //Arrays contain L, A, B values
     //public static final double[] GOLD_CIELAB_VALUES_CLOSE = {190, 80, 120};

@@ -73,6 +73,7 @@ public abstract class AutoOpMode extends LinearOpMode{
 
     Servo basketServo;
     Servo gateServo;
+    Servo hangServo;
 
     //ModernRoboticsI2cRangeSensor rangeSensor;
 
@@ -114,6 +115,7 @@ public abstract class AutoOpMode extends LinearOpMode{
 
         basketServo = hardwareMap.servo.get("basketServo");
         gateServo = hardwareMap.servo.get("gateServo");
+        hangServo = hardwareMap.servo.get("hangServo");
 
         //Non-Drive Train Motors
 
@@ -212,6 +214,10 @@ public abstract class AutoOpMode extends LinearOpMode{
         return ( ( Math.abs(BL.getCurrentPosition()) + Math.abs(BR.getCurrentPosition() + FR.getCurrentPosition() + FL.getCurrentPosition()) ) / 4);
     }
 
+    public int getAvgLiftEncoder() throws InterruptedException{
+        return (lift.getCurrentPosition());
+    }
+
     public int getSingleEncoder() throws InterruptedException{
         return FR.getCurrentPosition();
     }
@@ -222,10 +228,11 @@ public abstract class AutoOpMode extends LinearOpMode{
         double kI = 0.07 / 1000;
         double base = 0.07;
         double startTime = System.currentTimeMillis();
-        while (Math.abs(getSingleEncoder() - startEnc) < encoderDist && opModeIsActive()){
+        double timeElapsedMS = 0;
+        while (Math.abs(getSingleEncoder() - startEnc) < encoderDist && opModeIsActive() && (timeElapsedMS < 3500)){
             int error = Math.abs(encoderDist - (getSingleEncoder() - startEnc));
             telemetry.addData("Error", error);
-            double timeElapsedMS = System.currentTimeMillis() - startTime;
+            timeElapsedMS = System.currentTimeMillis() - startTime;
             double power = error * kP + base + kI * timeElapsedMS;
             //if (power > 0.4){
                 power = 0.35;
@@ -242,10 +249,11 @@ public abstract class AutoOpMode extends LinearOpMode{
         double kI = 0.07 / 1000;
         double base = 0.07;
         double startTime = System.currentTimeMillis();
-        while (Math.abs(getSingleEncoder() - startEnc) < encoderDist && opModeIsActive()){
+        double timeElapsedMS = 0;
+        while (Math.abs(getSingleEncoder() - startEnc) < encoderDist && opModeIsActive() && timeElapsedMS < 3500){
             int error = Math.abs(encoderDist - (getSingleEncoder() - startEnc));
             telemetry.addData("Error", error);
-            double timeElapsedMS = System.currentTimeMillis() - startTime;
+            timeElapsedMS = System.currentTimeMillis() - startTime;
             double power = error * kP + base + kI * timeElapsedMS;
             if (power > 0.4){
                 power = 0.4;
@@ -524,7 +532,7 @@ public abstract class AutoOpMode extends LinearOpMode{
         double speedUp = 0;
         double initialPower = 0.12;
         if (desired < 15){
-            initialPower = 0.24;
+            initialPower = 0.21;
         }
         double startTime = time.milliseconds();
         while (Math.abs(getFunctionalGyroYaw() - start) < desired - 1 && opModeIsActive()) {
@@ -558,6 +566,63 @@ public abstract class AutoOpMode extends LinearOpMode{
         //sleep(5000);
     }
 
+    public void pRightTurnPI(double desired) throws InterruptedException {
+        double start = getFunctionalGyroYaw();
+        double proximity = Math.abs(desired);
+        double kI = 0.000001;
+        double pastTime;
+        double currentTime = 0;
+        double cumulativeError = 0;
+        double timeElapsed = 0;
+        double prevProximity = 0;
+        double speedUp = 0;
+        double initialPower = 0.12;
+
+        if (desired < 15){
+            initialPower = 0.24;
+        }
+        double startTime = time.milliseconds();
+        while (Math.abs(getFunctionalGyroYaw() - start) < desired - 1 && opModeIsActive()) {
+            prevProximity = proximity;
+            proximity = Math.abs((Math.abs(getFunctionalGyroYaw() - start) - desired));
+            //double pTerm = proximity * 0.00355;
+            pastTime = currentTime;
+            currentTime = System.currentTimeMillis();
+            double deltaT = currentTime - pastTime;
+            timeElapsed += deltaT;
+            prevProximity = proximity;
+            double pTerm = proximity * 0.00455;
+            if (pTerm > 0.45){
+                pTerm = 0.45;
+            }
+            double power = -pTerm - initialPower - speedUp;
+            cumulativeError += deltaT * proximity;
+            double errDifferential = (proximity - prevProximity) / deltaT;
+            telemetry.addData("CumulativeError", cumulativeError);
+            telemetry.addData("Error differential", errDifferential);
+
+            telemetry.addData("Proximity Value: ", proximity);
+            telemetry.addData("Yaw (Functional): ", getFunctionalGyroYaw());
+            telemetry.addData("Time", time.milliseconds() - startTime);
+            telemetry.update();
+            //if (power > 0.4){
+            //    power = 0.4;
+            //}
+            telemetry.addData("Turn Power: ", power);
+            turn(power);
+            speedUp = (time.milliseconds() - startTime) * 0.12 / 1000;
+            if (time.milliseconds() - startTime > 3500){
+                numTurns = 99;
+                break;
+            }
+            //idle();
+        }
+        setZero();
+
+        telemetry.update();
+        //sleep(5000);
+    }
+
     public void pLeftTurn(double desired) throws InterruptedException {
         double start = getFunctionalGyroYaw();
         double proximity = Math.abs(desired);
@@ -566,7 +631,7 @@ public abstract class AutoOpMode extends LinearOpMode{
         speedUp = 0;
         double initialPower = 0.12;
         if (desired < 15){
-            initialPower = 0.24;
+            initialPower = 0.21;
         }
         double startTime = time.milliseconds();
 
@@ -603,6 +668,62 @@ public abstract class AutoOpMode extends LinearOpMode{
         //sleep(5000);
     }
 
+
+    public void pLeftTurnPI(double desired) throws InterruptedException {
+        double start = getFunctionalGyroYaw();
+        double proximity = Math.abs(desired);
+        double kI = 0.000001;
+
+        double timeSinceSpeedIncrease = 0;
+        double initialPower = 0.12;
+        if (desired < 15){
+            initialPower = 0.24;
+        }
+        double startTime = time.milliseconds();
+        double prevProximity = 0;
+        double cumulativeError = 0;
+        double pastTime;
+        double currentTime = 0;
+        double timeElapsed = 0;
+        while (Math.abs(getFunctionalGyroYaw() - start) < desired - 1 && opModeIsActive()) {
+            pastTime = currentTime;
+            currentTime = System.currentTimeMillis();
+            double deltaT = currentTime - pastTime;
+            timeElapsed += deltaT;
+            prevProximity = proximity;
+            proximity = Math.abs((Math.abs(getFunctionalGyroYaw() - start) - desired));
+            //double pTerm = proximity * 0.00355;
+            double pTerm = proximity * 0.00455;
+            if (pTerm > 0.45){
+                pTerm = 0.45;
+            }
+
+            cumulativeError += (proximity * deltaT);
+            double power = pTerm + cumulativeError * kI;
+            telemetry.addData("Proximity Value: ", proximity);
+
+            telemetry.addData("Yaw Value:", getFunctionalGyroYaw());
+            telemetry.addData("Speed Up", speedUp);
+            telemetry.update();
+            //if (power > 0.5){
+            //    power = 0.5;
+            //}
+            telemetry.addData("Turn value: ", power);
+            turn(power);
+            //if (time.milliseconds() - startTime >= 1000) {
+
+            //  }
+            if (time.milliseconds() - startTime > 3500){
+                numTurns = 99;
+                break;
+            }
+            //idle();
+        }
+        setZero();
+        telemetry.addData("Power", 0.2 + speedUp);
+        telemetry.update();
+        //sleep(5000);
+    }
 
     public void pLeftTurnTest(double desired) throws InterruptedException {
         double start = getFunctionalGyroYaw();
@@ -777,7 +898,7 @@ public abstract class AutoOpMode extends LinearOpMode{
 
     public void precisionTurnToPosition(double desiredAngle) throws InterruptedException{
         numTurns = 0;
-        while (Math.abs(getFunctionalGyroYaw() - desiredAngle) > 3 && numTurns < 4 && opModeIsActive()){
+        while (Math.abs(getFunctionalGyroYaw() - desiredAngle) > 2 && numTurns < 4 && opModeIsActive()){
             turnToPosition(desiredAngle);
             numTurns++;
         }
@@ -823,8 +944,13 @@ public abstract class AutoOpMode extends LinearOpMode{
 
     public double getRangeReading() throws InterruptedException{
         double reading = rangeSensor.getDistance(DistanceUnit.CM);
+        int numTrials = 0;
         while (reading > 400 || Double.isNaN(reading) && opModeIsActive()){
             reading = rangeSensor.getDistance(DistanceUnit.CM);
+            numTrials++;
+            if (numTrials > 25){
+                return -1;
+            }
         }
         return reading;
     }
@@ -920,6 +1046,69 @@ public abstract class AutoOpMode extends LinearOpMode{
         setPower(0);
     }
 
+    //Needs to be tested to tune the D and potentially the I constnat
+    public void moveToRangeBasicPI(double rangeCM) throws InterruptedException {
+        double kP = 0.23/63;
+        double kI = 0.0000012;
+        double currentTime = System.currentTimeMillis();
+        double pastTime;
+        double desired = getFunctionalGyroYaw();
+        double time = 0;
+        double numCalcs = 0;
+        double riemannSumError = 0;
+        double initialPower = 0.14;
+        double error = 99;
+        double prevError;
+        while (Math.abs(getRangeReading() - rangeCM) > 3 && opModeIsActive()){
+            prevError = error;
+            error = getRangeReading() - rangeCM;
+            double correctionalTurn = simpleStraighten(desired, 0.02);
+            telemetry.addData("Error", error);
+            telemetry.addData("Prev", prevError);
+            if (Math.abs(error - prevError) < 0.05){
+                telemetry.addData("Stagnation", "Stagnation");
+            }
+            pastTime = currentTime;
+            currentTime = System.currentTimeMillis();
+            double deltaT = currentTime - pastTime;
+            time += deltaT;
+            telemetry.addData("Time", time / 1000.0);
+            numCalcs++;
+            telemetry.addData("Count", numCalcs);
+            riemannSumError += deltaT * (error);
+            telemetry.addData("I Term", riemannSumError * kI);
+            double deltaE = error - prevError;
+            telemetry.addData("D Term", deltaE / deltaT);
+            //setPower(error * 0.23/70 + riemannSumError * kI);
+            double pTerm = kP * Math.abs(error);
+            telemetry.addData("PTerm", pTerm);
+            if (pTerm > 0.35){
+                pTerm = 0.35;
+            }
+            double iTerm = riemannSumError * kI;
+
+            if (iTerm > 0.15){
+                iTerm = 0.15;
+            }
+
+            if (error > 0){
+                //setPowerAndTurn(0 + pTerm + iTerm + 0.06, correctionalTurn);
+            }
+            else if (error < 0){
+                //setPowerAndTurn(-0 - pTerm - iTerm - 0.06, correctionalTurn);
+            }
+            if (time > 3500){
+                return;
+            }
+            telemetry.addData("Range", getRangeReading());
+            telemetry.update();
+            idle();
+        }
+        telemetry.addData("RangeMotion", "Complete");
+        telemetry.update();
+        setPower(0);
+    }
+
 
     public void moveEncoderDistancePI(int distance) throws InterruptedException{
         int start = Math.abs(getAvgEncoder());
@@ -946,6 +1135,63 @@ public abstract class AutoOpMode extends LinearOpMode{
     }
 
     public void moveToRangeBasic(double rangeCM, double angle) throws InterruptedException {
+        double kP = 0.23/63;
+        double kI = 0.0000012;
+        double currentTime = System.currentTimeMillis();
+        double pastTime;
+        double desired = angle;
+        double time = 0;
+        double numCalcs = 0;
+        double riemannSumError = 0;
+        double initialPower = 0.14;
+        while (Math.abs(getRangeReading() - rangeCM) > 3 && opModeIsActive()){
+            double range = getRangeReading();
+            if (getRangeReading() == -1){
+                return;
+            }
+            double error = range - rangeCM;
+            double correctionalTurn = simpleStraighten(desired, 0.02);
+            telemetry.addData("Error", error);
+            pastTime = currentTime;
+            currentTime = System.currentTimeMillis();
+            double deltaT = currentTime - pastTime;
+            time += deltaT;
+            telemetry.addData("Time", time / 1000.0);
+            numCalcs++;
+            telemetry.addData("Count", numCalcs);
+            riemannSumError += deltaT * (error);
+            telemetry.addData("I Term", riemannSumError * kI);
+            //setPower(error * 0.23/70 + riemannSumError * kI);
+            double pTerm = kP * Math.abs(error);
+            telemetry.addData("PTerm", pTerm);
+            if (pTerm > 0.35){
+                pTerm = 0.35;
+            }
+            double iTerm = time / 1000 * 0.05;
+
+            if (iTerm > 0.15){
+                iTerm = 0.15;
+            }
+
+            if (error > 0){
+                setPowerAndTurn(0 + pTerm + iTerm + 0.06, correctionalTurn);
+            }
+            else if (error < 0){
+                setPowerAndTurn(-0 - pTerm - iTerm - 0.06, correctionalTurn);
+            }
+            if (time > 3500){
+                return;
+            }
+            telemetry.addData("Range", getRangeReading());
+            telemetry.update();
+           // idle();
+        }
+        telemetry.addData("RangeMotion", "Complete");
+        telemetry.update();
+        setPower(0);
+    }
+
+    public void moveToRangeBasicBacksensor(double rangeCM, double angle) throws InterruptedException {
         double kP = 0.23/63;
         double kI = 0.0000012;
         double currentTime = System.currentTimeMillis();
@@ -997,6 +1243,7 @@ public abstract class AutoOpMode extends LinearOpMode{
         telemetry.update();
         setPower(0);
     }
+
 
     //Incorporates proportional and integral components to range sensor motion. Not as well tuned
     //as the version with just a P loop
@@ -1467,11 +1714,14 @@ public abstract class AutoOpMode extends LinearOpMode{
 
     public void powerLiftUpP(int encDist) throws InterruptedException{
         int startEnc = getLiftEncoder();
-        while (opModeIsActive() && (getLiftEncoder() - startEnc < encDist)){
-            int error = Math.abs(encDist - (getAvgEncoder() - startEnc));
-            lift.setPower(0.1 + error * 0.15 / 200.0);
-            lift2.setPower(-0.1 - error * 0.15 / 200.0);
-            telemetry.addData("Power", 0.1 + error * 0.15 / 200.0);
+        while (opModeIsActive() && (Math.abs(getLiftEncoder() - startEnc) < encDist)){
+            int error = Math.abs(encDist - Math.abs(getLiftEncoder() - startEnc));
+            double power = 0.23 + error * 0.15 / 200.0;
+            lift.setPower(power);
+            lift2.setPower(-power);
+            telemetry.addData("Error", error);
+            telemetry.addData("Distance", Math.abs(getLiftEncoder() - startEnc));
+            telemetry.addData("Power", 0.23 + error * 0.15 / 200.0);
             telemetry.update();
         }
         lift.setPower(0);
@@ -1480,11 +1730,15 @@ public abstract class AutoOpMode extends LinearOpMode{
 
     public void powerLiftDownP(int encDist) throws InterruptedException{
         int startEnc = getLiftEncoder();
-        while (opModeIsActive() && (getLiftEncoder() - startEnc < encDist)){
-            int error = Math.abs(encDist - (getAvgEncoder() - startEnc));
-            lift.setPower(-0.1 - error * 0.15 / 200.0);
-            lift2.setPower(0.1 + error * 0.15 / 200.0);
-            telemetry.addData("Power", 0.1 + error * 0.15 / 200.0);
+        while (opModeIsActive() && (Math.abs(getLiftEncoder() - startEnc) < encDist)){
+            int error = Math.abs(encDist - Math.abs(getLiftEncoder() - startEnc));
+            double power = 0.23 + error * 0.15 / 200.0;
+
+            lift.setPower(-power);
+            lift2.setPower(power);
+            telemetry.addData("Error", error);
+            telemetry.addData("Distance", Math.abs(getLiftEncoder() - startEnc));
+            telemetry.addData("Power", 0.23 + error * 0.15 / 200.0);
             telemetry.update();
         }
         lift.setPower(0);

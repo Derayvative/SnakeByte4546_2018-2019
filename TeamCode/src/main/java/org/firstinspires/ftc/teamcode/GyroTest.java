@@ -4,7 +4,7 @@ import android.graphics.Bitmap;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-//@Autonomous
+@Autonomous
 public class GyroTest extends AutoOpMode {
     @Override
     public void runOpMode() throws InterruptedException {

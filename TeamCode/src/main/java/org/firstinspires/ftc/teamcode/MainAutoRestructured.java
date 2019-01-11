@@ -4,22 +4,15 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.util.ReadWriteFile;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Scanner;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-
-import static org.firstinspires.ftc.teamcode.RobotConstants.HANG_SERVO_DOWN_POSITION;
-import static org.firstinspires.ftc.teamcode.RobotConstants.HANG_SERVO_UP_POSITION;
 
 /**
  * This 2018-2019 OpMode illustrates the basics of using the TensorFlow Object Detection API to
@@ -31,9 +24,9 @@ import static org.firstinspires.ftc.teamcode.RobotConstants.HANG_SERVO_UP_POSITI
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@Autonomous(name = "123MATTRUNTHISAUTONOMOUS")
+//@Autonomous(name = "1234MATTRUNTHISAUTONOMOUS")
 
-public class GoldDetectorTensorFlow extends AutoOpMode {
+public class MainAutoRestructured extends AutoOpMode {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
@@ -72,16 +65,8 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
         // first.
         initVuforia();
         initialize();
-        hangServo.setPosition(HANG_SERVO_UP_POSITION);
-
-
         int goldMineralX = -1;
         String target = "Unknown";
-        String filename = "AutonomousOptions.txt";
-        File file = AppUtil.getInstance().getSettingsFile(filename);
-        String fileText = ReadWriteFile.readFile(file);
-        Scanner reader = new Scanner(fileText);
-        double delay = reader.nextDouble();
 
         if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
             initTfod();
@@ -91,7 +76,6 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
 
         //waitForStart();
 
-
         /** Wait for the game to begin */
         //telemetry.addData(">", "Press Play to start tracking");
         telemetry.update();
@@ -99,7 +83,6 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
 
         if (!isStarted            /** Activate Tensor Flow Object Detection. */
                 ()) {
-            telemetry.addData("Delay", delay);
             if (tfod != null) {
                 tfod.activate();
             }
@@ -207,7 +190,7 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
                             }
                         }
                     }
-                    
+
                 }
                 telemetry.addData("Recent results", Arrays.toString(recentResults));
                 target = getTarget(recentResults);
@@ -220,13 +203,9 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
             tfod.shutdown();
         }
         waitForStart();
-        hangServo.setPosition(HANG_SERVO_DOWN_POSITION);
-        sleep(2000);
-        powerLiftUpP(1400);
-        //sleep((int)delay);
         if (target.equals("Right")){
-            precisionTurnToPosition(-153.0);
-            PEncoderSetPowerForward(1050);
+            precisionTurnToPosition(27);
+            PEncoderSetPowerBackward(1050);
             moveToRangeBasic(14.0, -153);
             precisionTurnToPosition(-225);
             PEncoderSetPowerForward(600);
@@ -235,7 +214,7 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
             precisionTurnToPosition(-120);
 
             setPower(-0.5);
-            sleep(1500);
+            sleep(3000);
             if (Math.abs(getFunctionalGyroYaw() - (-135)) > 5){
                 turnToPosition(-135);
             }
@@ -248,13 +227,13 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
             sleep(5000);
         }
         if (target.equals("Middle")){
-            precisionTurnToPosition(180);
-            PEncoderSetPowerForward(3500);
+            precisionTurnToPosition(0);
+            PEncoderSetPowerBackward(2000);
             moveToRangeBasic(20.0, 180);
             dropTeamMarker();
             precisionTurnToPosition(245);
             setPower(-0.5);
-            sleep(1500);
+            sleep(3000);
             if (Math.abs(getFunctionalGyroYaw() - (225)) > 5){
                 turnToPosition(225);
             }
@@ -267,7 +246,7 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
             sleep(5000);
         }
         if (target.equals("Left")){
-            precisionTurnToPosition(153);
+            precisionTurnToPosition(-27);
             PEncoderSetPowerForward(1050);
             moveToRangeBasic(14.0, 153);
             precisionTurnToPosition(225);
@@ -276,7 +255,7 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
             dropTeamMarker();
             precisionTurnToPosition(245);
             setPower(-0.5);
-            sleep(1500);
+            sleep(3000);
             if (Math.abs(getFunctionalGyroYaw() - (225)) > 5){
                 turnToPosition(225);
             }
