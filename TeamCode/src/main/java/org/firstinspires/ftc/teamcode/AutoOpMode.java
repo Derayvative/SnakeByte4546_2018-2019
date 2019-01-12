@@ -497,6 +497,21 @@ public abstract class AutoOpMode extends LinearOpMode{
         }
     }
 
+    public void moveBackwardEncoderSingle(double power, int distance) throws InterruptedException {
+        int startPos = getAvgEncoder();
+        while ((Math.abs(getSingleEncoder() - startPos) < distance) && (opModeIsActive())) {
+            setPower(-power);
+            telemetry.addData("distance", getSingleEncoder() - startPos);
+            telemetry.update();
+            idle();
+        }
+        setZero();
+        if (Math.abs(getSingleEncoder() - startPos) > distance + 50) {
+            telemetry.addData("overshoot", "fix");
+            telemetry.update();
+        }
+    }
+
     public void moveBackwardEncoderP(int distance) throws InterruptedException {
         double startPos = getAvgEncoder();
         while ((Math.abs(getAvgEncoder() - startPos) < distance) && (opModeIsActive())) {
@@ -1730,7 +1745,8 @@ public abstract class AutoOpMode extends LinearOpMode{
 
     public void powerLiftDownP(int encDist) throws InterruptedException{
         int startEnc = getLiftEncoder();
-        while (opModeIsActive() && (Math.abs(getLiftEncoder() - startEnc) < encDist)){
+        double startTime = System.currentTimeMillis();
+        while (opModeIsActive() && (Math.abs(getLiftEncoder() - startEnc) < encDist) && System.currentTimeMillis() - startTime < 2000){
             int error = Math.abs(encDist - Math.abs(getLiftEncoder() - startEnc));
             double power = 0.23 + error * 0.15 / 200.0;
 

@@ -7,7 +7,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ReadWriteFile;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
@@ -123,6 +125,30 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
                             }
                         }
 
+                        ArrayList<Integer> removedInts = new ArrayList<>();
+                        for (int i = 0; i < updatedRecognitions.size(); i++){
+                            Recognition rec = updatedRecognitions.get(i);
+                            for (int j = 0; j < updatedRecognitions.size(); j++){
+                                Recognition rec2 = updatedRecognitions.get(j);
+                                if (Math.abs((rec.getLeft() + rec.getRight())/2 - (rec2.getLeft() + rec.getRight())/2) < 150){
+                                    if (rec.getConfidence() < rec2.getConfidence()){
+                                        if (!removedInts.contains(i)){
+                                            removedInts.add(i);
+                                        }
+                                    }
+                                    if (rec.getConfidence() > rec2.getConfidence()){
+                                        if (!removedInts.contains(j)){
+                                            removedInts.add(j);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Collections.sort(removedInts, Collections.reverseOrder());
+                        for (int i : removedInts){
+                            updatedRecognitions.remove(i);
+                        }
+
                         if (updatedRecognitions.size() == 3) {
                             goldMineralX = -1;
                             int silverMineral1X = -1;
@@ -221,12 +247,20 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
         }
         waitForStart();
         hangServo.setPosition(HANG_SERVO_DOWN_POSITION);
-        sleep(2000);
-        powerLiftUpP(1400);
+        sleep(1500);
+        moveBackwardEncoderSingle(0.2, 27);
+        sleep(500);
+        powerLiftUpP(2000);
+        PEncoderSetPowerBackward(15);
+        powerLiftDownP(7000);
+        powerLiftUpP(900);
         //sleep((int)delay);
         if (target.equals("Right")){
-            precisionTurnToPosition(-153.0);
+
+            precisionTurnToPosition(-147.0);
+
             PEncoderSetPowerForward(1050);
+
             moveToRangeBasic(14.0, -153);
             precisionTurnToPosition(-225);
             PEncoderSetPowerForward(600);
@@ -239,8 +273,8 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
             if (Math.abs(getFunctionalGyroYaw() - (-135)) > 5){
                 turnToPosition(-135);
             }
-            middleIntake.setPower(-0.75);
-            outerIntake.setPower(1);
+            //middleIntake.setPower(-0.75);
+            //outerIntake.setPower(1);
             setPower(-0.5);
             sleep(1000);
             middleIntake.setPower(0);
@@ -249,8 +283,10 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
         }
         if (target.equals("Middle")){
             precisionTurnToPosition(180);
-            PEncoderSetPowerForward(3500);
-            moveToRangeBasic(20.0, 180);
+
+            PEncoderSetPowerForward(4500);
+
+            //moveToRangeBasic(20.0, 180);
             dropTeamMarker();
             precisionTurnToPosition(245);
             setPower(-0.5);
@@ -258,8 +294,8 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
             if (Math.abs(getFunctionalGyroYaw() - (225)) > 5){
                 turnToPosition(225);
             }
-            middleIntake.setPower(-0.75);
-            outerIntake.setPower(-1);
+            //middleIntake.setPower(-0.75);
+            //outerIntake.setPower(-1);
             setPower(-0.5);
             sleep(1000);
             middleIntake.setPower(0);
@@ -267,8 +303,9 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
             sleep(5000);
         }
         if (target.equals("Left")){
-            precisionTurnToPosition(153);
+            precisionTurnToPosition(147);
             PEncoderSetPowerForward(1050);
+
             moveToRangeBasic(14.0, 153);
             precisionTurnToPosition(225);
             PEncoderSetPowerForward(600);
@@ -280,8 +317,8 @@ public class GoldDetectorTensorFlow extends AutoOpMode {
             if (Math.abs(getFunctionalGyroYaw() - (225)) > 5){
                 turnToPosition(225);
             }
-            middleIntake.setPower(-0.75);
-            outerIntake.setPower(1);
+            //middleIntake.setPower(-0.75);
+            //outerIntake.setPower(1);
             setPower(-0.5);
             sleep(1000);
             middleIntake.setPower(0);
