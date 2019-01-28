@@ -9,7 +9,7 @@ import java.io.File;
 import java.util.Scanner;
 import java.util.concurrent.locks.ReadWriteLock;
 
-@Autonomous
+//@Autonomous
 public class FileReadTest extends AutoOpMode {
     @Override
     public void runOpMode() throws InterruptedException {

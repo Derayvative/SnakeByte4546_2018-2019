@@ -7,7 +7,7 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 import java.io.File;
 
-@Autonomous
+//@Autonomous
 public class AutonomousSettingsToggle extends AutoOpMode {
     @Override
     public void runOpMode() throws InterruptedException {

@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 //
 //
-@Autonomous
+//@Autonomous
 public class LM2AUTO extends AutoOpMode{
     @Override
     public void runOpMode() throws InterruptedException {

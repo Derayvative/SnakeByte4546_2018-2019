@@ -4,12 +4,12 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import java.util.Arrays;
 
-//@Autonomous
+@Autonomous
 public class MovementBetweenMineralsTest extends AutoOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         initialize();
         waitForStart();
-        glideAgainstWallMovingBack();
+        liftToHeightAndMove(8000, 1200);
     }
 }

@@ -16,7 +16,7 @@ import static org.firstinspires.ftc.teamcode.RobotConstants.TEAM_MARKER_UP_POSIT
 
 
 @TeleOp
-public class TeleOpMode extends OpMode{
+public class SoloDrive extends OpMode{
 
     // ======= instance variables: =======
 
@@ -60,6 +60,13 @@ public class TeleOpMode extends OpMode{
     boolean hangMode;
 
     double upLifThreshold;
+    boolean liftStartedMoving;
+    int encGoal;
+    int startEnc;
+    int liftShift = 0;
+
+    int prevEnc;
+    int currEnc = -5;
 
     //Constants
 
@@ -117,6 +124,7 @@ public class TeleOpMode extends OpMode{
         mostRecentDPadUpPress = 0;
         upLifThreshold = 0.1;
         hangMode = false;
+        liftStartedMoving = false;
 
 
     }
@@ -183,6 +191,7 @@ public class TeleOpMode extends OpMode{
             BR.setPower(0);
         }
 
+        /*
         if (time.milliseconds() - mostRecentBPress > 250) {
             if (gamepad1.b && (halfSpeed == 1)) {
                 halfSpeed = 0.5;
@@ -198,8 +207,9 @@ public class TeleOpMode extends OpMode{
         else{
             telemetry.addData("Half Speed (B)", "False");
         }
+        */
 
-        if (gamepad2.right_trigger > 0.1){
+        if (gamepad1.right_trigger > 0.1){
             middleIntake.setPower(-1);
             outerIntake.setPower(-1);
             if (!gateServoPositionDown) {
@@ -212,40 +222,42 @@ public class TeleOpMode extends OpMode{
             //}
 
         }
-        else if (gamepad2.right_bumper){
+        else if (gamepad1.right_bumper){
             middleIntake.setPower(-1);
             outerIntake.setPower(0);
         }
-        else if (gamepad2.left_trigger > 0.1){
+        else if (gamepad1.left_trigger > 0.1){
             middleIntake.setPower(1);
             outerIntake.setPower(1);
-          //  if (!gateServoPositionDown){
+            //  if (!gateServoPositionDown){
 
             //}
         }
-        else if (gamepad2.left_bumper){
+        else if (gamepad1.left_bumper){
             middleIntake.setPower(1);
             outerIntake.setPower(0);
         }
 
+        /*
         else if (gamepad1.right_trigger > 0.1){
             outerIntake.setPower(gamepad1.right_trigger / 10.0 + 0.1);
         }
         else if (gamepad1.left_trigger > 0.1){
             outerIntake.setPower(-gamepad1.left_trigger / 10.0 - 0.1);
         }
+        */
         else{
             middleIntake.setPower(0);
             outerIntake.setPower(0);
         }
 
-        if (gamepad2.left_stick_y > 0.1){
-            lift.setPower(-gamepad2.left_stick_y);
-            lift2.setPower(gamepad2.left_stick_y);
+        if (gamepad1.dpad_up){
+            lift.setPower(1);
+            lift2.setPower(-1);
         }
-        else if (gamepad2.left_stick_y < -upLifThreshold){
-            lift.setPower(-gamepad2.left_stick_y);
-            lift2.setPower(gamepad2.left_stick_y);
+        else if (gamepad1.dpad_down){
+            lift.setPower(-1);
+            lift2.setPower(1);
         }
         else{
             lift.setPower(0);
@@ -274,12 +286,12 @@ public class TeleOpMode extends OpMode{
         }
         */
 
-        if (gamepad2.b && gateServoPositionDown && time.milliseconds() - mostRecentAPress > 250 && !gamepad2.start){
+        if (gamepad1.b && gateServoPositionDown && time.milliseconds() - mostRecentAPress > 250 && !gamepad2.start){
             gateServoPositionDown = false;
             gateServo.setPosition(GATE_DOWN_POSITION);
             mostRecentAPress = time.milliseconds();
         }
-        else if (gamepad2.b && !gateServoPositionDown && time.milliseconds() - mostRecentAPress > 250 && !gamepad2.start){
+        else if (gamepad1.b && !gateServoPositionDown && time.milliseconds() - mostRecentAPress > 250 && !gamepad2.start){
             gateServoPositionDown = true;
             gateServo.setPosition(GATE_UP_POSITION);
             mostRecentAPress = time.milliseconds();
@@ -300,6 +312,14 @@ public class TeleOpMode extends OpMode{
         else if (!gamepad1.x) {
             xLastPressed = false;
         }
+
+        if (gamepad1.left_stick_button){
+            initiatePrecisionLift(8000);
+        }
+        else if (gamepad1.right_stick_button){
+            initiatePrecisionLift(0);
+        }
+        updateLiftPower();
         /*
         if (gamepad2.y){
             basketServoPositionDown = true;
@@ -347,6 +367,7 @@ public class TeleOpMode extends OpMode{
         telemetry.addData("Basket Down", basketServoPositionDown);
         telemetry.addData("GP1", gamepad1.toString().substring(gamepad1.toString().indexOf("lx")));
         telemetry.addData("GP2", gamepad2.toString().substring(gamepad2.toString().indexOf("lx")));
+        telemetry.addData("Lift Encoder", lift.getCurrentPosition());
 
 
         // Intake:
@@ -367,6 +388,70 @@ public class TeleOpMode extends OpMode{
 
 
     } // end of loop
+
+    public void liftToHeight(int encoderGoal) throws InterruptedException {
+        startEnc = getLiftEncoder();
+        boolean underTarget;
+        if (Math.abs(getLiftEncoder()) < encoderGoal) {
+            underTarget = true;
+        } else {
+            underTarget = false;
+        }
+        encGoal = encoderGoal;
+        liftStartedMoving = true;
+    }
+
+    public void updateLiftPower() {
+
+        if ((Math.abs(Math.abs(getLiftEncoder()) - encGoal)) > 10  && liftStartedMoving){
+
+            int error = Math.abs(encGoal - Math.abs(getLiftEncoder()));
+            double power = 0.13 + error * 0.35 / 200.0;
+            prevEnc = currEnc;
+            currEnc = getLiftEncoder();
+            if (prevEnc - currEnc == 0){
+                power = 0;
+                liftStartedMoving = false;
+                if (getLiftEncoder() < 150){
+                    liftShift = getLiftEncoder();
+                }
+            }
+            telemetry.addData(getLiftEncoder() + " " + encGoal, "Yo");
+            if (Math.abs(getLiftEncoder()) > encGoal){
+                power *= -1;
+                telemetry.addData("Over", "Over");
+            }
+            lift.setPower(power);
+            lift2.setPower(-power);
+            telemetry.addData("Error", error);
+            telemetry.addData("Distance", Math.abs(getLiftEncoder() - startEnc));
+            telemetry.addData("Power", 0.13 + error * 0.35 / 200.0);
+            telemetry.update();
+        }
+        else{
+            lift.setPower(0);
+            lift2.setPower(0);
+            liftStartedMoving = false;
+        }
+    }
+
+
+
+    public void initiatePrecisionLift(int encoderGoal){
+        startEnc = getLiftEncoder();
+        boolean underTarget;
+        if (Math.abs(getLiftEncoder()) < encoderGoal) {
+            underTarget = true;
+        } else {
+            underTarget = false;
+        }
+        encGoal = encoderGoal;
+        liftStartedMoving = true;
+    }
+
+    public int getLiftEncoder(){
+        return lift.getCurrentPosition() - liftShift;
+    }
 
 
 
